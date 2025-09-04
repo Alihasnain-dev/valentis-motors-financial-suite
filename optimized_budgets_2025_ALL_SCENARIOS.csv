@@ -1,0 +1,23 @@
+Scenario,Department,Requested_Budget,Min_Required,Max_Plausible,Optimized_Allocation
+Baseline,Executive Office,2266273.0,1815776.98,2632876.86,2632876.9
+Baseline,R&D,1737267.67,1208331.41,1984246.91,1386909.9
+Baseline,Manufacturing & Operations,1677304.9,1215501.11,1856844.74,1856844.7
+Baseline,Supply Chain & Procurement,1684116.07,1288044.25,1966554.46,1966554.5
+Baseline,Sales & Marketing,2124086.54,1573737.95,2514600.7,1573737.9
+Baseline,Finance & Accounting,1226572.35,1002376.18,1416155.65,1002376.2
+Baseline,Human Resources,1152399.05,1024603.51,1705621.55,1024603.5
+Baseline,Information Technology,1816282.38,1421290.82,2180070.92,2180070.9
+Baseline,Legal & Compliance,890880.03,790993.45,1134317.85,790993.45
+Baseline,Strategy & Business Development,1581468.06,1173287.28,1723482.96,1723483.0
+Baseline,Customer Service & After-Sales,683276.83,555567.44,861549.1,861549.1
+TariffScenarioExtended,Executive Office,2266273.0,1815776.98,2632876.86,1815777.0
+TariffScenarioExtended,R&D,1737267.67,1208331.41,1984246.91,1208331.4
+TariffScenarioExtended,Manufacturing & Operations,1677304.9,1215501.11,1856844.74,1856844.7
+TariffScenarioExtended,Supply Chain & Procurement,1684116.07,1288044.25,1966554.46,1288044.3
+TariffScenarioExtended,Sales & Marketing,2124086.54,1573737.95,2514600.7,1573737.9
+TariffScenarioExtended,Finance & Accounting,1226572.35,1002376.18,1416155.65,1002376.2
+TariffScenarioExtended,Human Resources,1152399.05,1024603.51,1705621.55,1024603.5
+TariffScenarioExtended,Information Technology,1816282.38,1421290.82,2180070.92,1960241.1
+TariffScenarioExtended,Legal & Compliance,890880.03,790993.45,1134317.85,790993.45
+TariffScenarioExtended,Strategy & Business Development,1581468.06,1173287.28,1723482.96,1723483.0
+TariffScenarioExtended,Customer Service & After-Sales,683276.83,555567.44,861549.1,555567.44
