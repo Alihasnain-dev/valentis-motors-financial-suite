@@ -1,0 +1,31 @@
+# Ignore all CSV and Excel files by default
+*.csv
+*.xlsx
+
+# Now, explicitly UN-ignore the specific files you want to KEEP
+# The "!" at the beginning means "do not ignore this file"
+!Monthly_Mock_CapEx.csv
+!Valentis_Motors_Data.xlsx
+!baseline_forecasts_ALL_COMPONENTS.csv
+!final_cash_flow_summary_baseline.csv
+!mock_economic_indicators.csv
+!prepared_cash_flow_data.csv
+!optimized_budgets_2025_ALL_SCENARIOS.csv
+
+# Python Virtual Environment
+ myenv/
+
+# Python Cache
+__pycache__/
+
+# IDE and OS specific files
+.vscode/
+.idea/
+.DS_Store
+desktop.ini
+
+# Output folders and files
+output/
+newforecastdata/
+Pics for site - comparisons/
+*.png
