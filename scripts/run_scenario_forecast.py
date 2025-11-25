@@ -4,6 +4,7 @@ import numpy as np
 from prophet import Prophet
 from sklearn.metrics import mean_absolute_error
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Scenario selection based on command-line argument
 arg = sys.argv[1].lower() if len(sys.argv) > 1 else "baseline"
@@ -16,6 +17,8 @@ print(f"\nRunning forecast for scenario: {SCENARIO}\n")
 
 # File paths and targets
 Y_PATH      = "prepared_cash_flow_data.csv"
+SYNTHETIC_HISTORY_PATH = Path("data/synthetic_historical_training_data.csv")
+USE_SYNTHETIC_HISTORY = True  # blends synthetic history with recent Valentis data if available
 BASE_IND    = "mock_economic_indicators.csv"
 TARIFF_IND  = "mock_economic_indicators_TARIFF_SCENARIO_EXTENDED.csv"
 
@@ -31,21 +34,69 @@ econ_regs   = [
 T0 = pd.to_datetime("2025-02-28") + pd.offsets.MonthEnd(0)
 T1 = pd.to_datetime("2026-06-30") + pd.offsets.MonthEnd(0)
 
-# Load historical target variable data
-df_y = pd.read_csv(Y_PATH)
+# Load historical target variable data (blended with synthetic history)
+# We want to use Synthetic History (2000-2021) to learn long-term economic relationships
+# and Real Valentis Data (2021-Present) to learn recent scale and seasonality.
+
+# 1. Load Real Valentis Data
+df_y_actual = pd.read_csv(Y_PATH)
 for c in ("ds","statement_date","balance_date","Unnamed: 0"):
-    if c in df_y.columns:
-        df_y["ds"] = pd.to_datetime(df_y[c])
+    if c in df_y_actual.columns:
+        df_y_actual["ds"] = pd.to_datetime(df_y_actual[c])
         break
-df_y = df_y[["ds"] + targets]
+
+# 2. Load Synthetic History
+df_syn = pd.read_csv(SYNTHETIC_HISTORY_PATH, parse_dates=["ds"])
+# Ensure columns match for concatenation
+df_syn = df_syn.rename(columns={"y": "inflow_operating_revenue"})
+
+# 3. Combine Them
+# Filter synthetic to end strictly before Valentis data starts to avoid overlap
+valentis_start_date = df_y_actual['ds'].min()
+df_syn = df_syn[df_syn['ds'] < valentis_start_date].copy()
+
+# Add placeholder columns for other targets in synthetic data (set to NaN or 0)
+# Since synthetic data only models 'inflow_operating_revenue', other targets
+# will effectively rely only on recent history or need their own synthetic proxies.
+# For now, we leave them as NaN so Prophet ignores them during those periods
+# (Prophet handles missing y values).
+# Ensure synthetic dataframe has the columns we need; if not, fill NaN (only for missing ones)
+# Since we updated build_synthetic_history.py, these should now exist for COGS and Opex.
+for tgt in targets:
+    if tgt not in df_syn.columns:
+        print(f"Warning: {tgt} not found in synthetic history. Filling with NaN.")
+        df_syn[tgt] = np.nan
+
+# Select only necessary columns from both
+df_syn = df_syn[["ds"] + targets].copy() # Indicators will come from df_full later
+df_y_actual_reduced = df_y_actual[["ds"] + targets].copy()
+
+# Concatenate
+df_y = pd.concat([df_syn, df_y_actual_reduced], axis=0, ignore_index=True).sort_values("ds").reset_index(drop=True)
+
+print(f"Combined History Loaded: {len(df_y)} months (Synthetic: {len(df_syn)}, Actual: {len(df_y_actual)})")
 
 # Load baseline economic indicators
-df_base = (
+# We need indicators for the FULL history (2000-Present) to match df_y
+# 1. Load Synthetic Indicators (2000-2021)
+df_syn_ind = pd.read_csv(SYNTHETIC_HISTORY_PATH, parse_dates=["ds"])
+df_syn_ind = df_syn_ind[["ds"] + econ_regs].copy()
+
+# 2. Load Real Baseline Indicators (2021-Present)
+df_base_real = (
     pd.read_csv(BASE_IND, parse_dates=["Date"])
       .rename(columns={"Date":"ds"})
 )
-df_base["ds"] = df_base["ds"] + pd.offsets.MonthEnd(0)
-df_base = df_base[["ds"] + econ_regs].sort_values("ds").reset_index(drop=True)
+df_base_real["ds"] = df_base_real["ds"] + pd.offsets.MonthEnd(0)
+df_base_real = df_base_real[["ds"] + econ_regs].sort_values("ds").reset_index(drop=True)
+
+# 3. Combine Indicators
+# Filter synthetic to end before real data starts
+real_start = df_base_real["ds"].min()
+df_syn_ind = df_syn_ind[df_syn_ind["ds"] < real_start].copy()
+
+df_base = pd.concat([df_syn_ind, df_base_real], axis=0, ignore_index=True).sort_values("ds").reset_index(drop=True)
+print(f"Combined Indicators Loaded: {len(df_base)} months (Synthetic: {len(df_syn_ind)}, Real: {len(df_base_real)})")
 
 # If tariff scenario, overlay the mock-tariff values during the defined window
 if SCENARIO == "TariffScenarioExtended":
@@ -81,12 +132,13 @@ else:
 
 # Build regressor list and master table for modeling
 regs = econ_regs.copy()
-if SCENARIO == "TariffScenarioExtended":
-    # Add a binary flag for the tariff period as a regressor
-    df_full["tariff_flag"] = ((df_full.ds >= T0) & (df_full.ds <= T1)).astype(int)
-    regs.append("tariff_flag")
+# Note: We rely purely on economic indicators (Interest Rate, Confidence, etc.)
+# to drive the forecast. No hardcoded 'tariff_flag' is used.
 
-df_master = df_full.merge(df_y, on="ds", how="left")
+# Use outer join to keep all history (df_y) even if df_full was missing some dates (though it shouldn't now)
+df_master = df_full.merge(df_y, on="ds", how="outer").sort_values("ds")
+# Drop rows where we have no regressors (if any)
+df_master = df_master.dropna(subset=econ_regs)
 
 # Forecast loop for each target variable
 all_out = None
@@ -109,8 +161,7 @@ for tgt in targets:
         m.add_regressor(r, mode="multiplicative", prior_scale=100.0)
 
     # Add tariff flag as a multiplicative regressor if applicable
-    if "tariff_flag" in regs:
-        m.add_regressor("tariff_flag", mode="multiplicative", prior_scale=300.0)
+    # (Removed to rely on economic indicators)
 
     m.fit(train)
 
@@ -151,7 +202,8 @@ for tgt in targets:
     out     = actuals.merge(out, on="ds", how="outer").sort_values("ds")
     all_out = out if all_out is None else all_out.merge(out, on="ds", how="outer")
 
-# Save all combined forecasts to a single CSV file
-fn = f"{SCENARIO}_forecasts_ALL_COMPONENTS.csv"
+    # Save all combined forecasts to a single CSV file
+    out_name = "baseline" if SCENARIO.lower() == "baseline" else SCENARIO
+    fn = f"{out_name}_forecasts_ALL_COMPONENTS.csv"
 all_out.to_csv(fn, index=False)
 print(f"\nSaved all forecasts to: {fn}\n")

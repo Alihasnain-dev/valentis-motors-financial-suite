@@ -1,31 +1,36 @@
-# Ignore all CSV and Excel files by default
+# Ignore all CSV and Excel files by default to avoid committing large datasets
 *.csv
 *.xlsx
 
-# Now, explicitly UN-ignore the specific files you want to KEEP
-# The "!" at the beginning means "do not ignore this file"
+# --- Whitelist: Essential Data Files for Running the Project ---
 !Monthly_Mock_CapEx.csv
-!Valentis_Motors_Data.xlsx
-!baseline_forecasts_ALL_COMPONENTS.csv
-!final_cash_flow_summary_baseline.csv
 !mock_economic_indicators.csv
-!prepared_cash_flow_data.csv
+!mock_economic_indicators_TARIFF_SCENARIO_EXTENDED.csv
+!data/synthetic_historical_training_data.csv
+
+# Keep sample outputs so the repo looks populated
+!final_cash_flow_summary_BASELINE.csv
+!final_cash_flow_summary_TARIFF.csv
 !optimized_budgets_2025_ALL_SCENARIOS.csv
 
-# Python Virtual Environment
- myenv/
+# --- Python Virtual Environment ---
+.venv/
+myenv/
+env/
+venv/
 
-# Python Cache
+# --- Python Cache ---
 __pycache__/
+*.py[cod]
 
-# IDE and OS specific files
+# --- IDE and OS specific files ---
 .vscode/
 .idea/
 .DS_Store
 desktop.ini
 
-# Output folders and files
-output/
-newforecastdata/
-Pics for site - comparisons/
+# --- Output Images (Whitelist only the best ones for README) ---
 *.png
+!plot_scenario_comparison_revenue.png
+!validation_backtest_2023_2024.png
+!plot_budget_optimization_comparison.png

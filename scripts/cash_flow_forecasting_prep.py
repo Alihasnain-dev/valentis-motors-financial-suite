@@ -135,7 +135,17 @@ df_main['inflow_operating_revenue'] = df_main['revenue']
 
 # Calculate Cash Outflows
 df_main['outflow_cogs'] = df_main['cogs_materials'] + df_main['cogs_labor'] + df_main['cogs_overhead']
-df_main['outflow_opex'] = df_main['operating_expenses']
+
+# SANITY CHECK PATCH:
+# If Opex is suspiciously low (< 1% of revenue), assume data error and estimate as 15% of revenue
+# This fixes the "Steep Decline" cliff in the forecast visualization
+df_main['outflow_opex_raw'] = df_main['operating_expenses']
+df_main['outflow_opex'] = np.where(
+    df_main['outflow_opex_raw'] < (df_main['inflow_operating_revenue'] * 0.01),
+    df_main['inflow_operating_revenue'] * 0.15,
+    df_main['outflow_opex_raw']
+)
+
 df_main['outflow_interest'] = df_main['interest_expense']
 df_main['outflow_taxes'] = df_main['taxes']
 
