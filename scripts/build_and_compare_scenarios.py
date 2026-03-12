@@ -17,9 +17,9 @@ COMPARISON_PLOT_PATH = "plot_scenario_comparison_revenue.png"
 TARIFF_START_DATE = pd.to_datetime("2025-02-28")
 TARIFF_END_DATE = pd.to_datetime("2026-06-30")
 
-ELASTICITY_ACTIVITY = 0.6    # Revenue sensitivity to activity index pct change
-ELASTICITY_CONFIDENCE = 0.4  # Revenue sensitivity to confidence pct change
-ELASTICITY_COST = 0.6        # COGS sensitivity to component cost pct change
+ELASTICITY_ACTIVITY = 0.6    
+ELASTICITY_CONFIDENCE = 0.4  
+ELASTICITY_COST = 0.6       
 
 print("Starting Scenario Build & Comparison (using model outputs)...")
 

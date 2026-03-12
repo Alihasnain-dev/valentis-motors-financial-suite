@@ -91,7 +91,7 @@ def build_synthetic(df_macro: pd.DataFrame, scale_rev: float, ratio_cogs: float,
     # This ensures the multiplier works mathematically as a percentage scaler
     cost_index_normalized = df["EV_Component_Cost_Index"] / df["EV_Component_Cost_Index"].mean()
     
-    # 3. COGS Calculation (The Critical Fix)
+    # 3. COGS Calculation 
     # COGS = Revenue * Base_Ratio * Cost_Index_Factor
     # If Cost Index goes up 10%, COGS Ratio goes up 10%
     df["outflow_cogs"] = df["inflow_operating_revenue"] * ratio_cogs * cost_index_normalized

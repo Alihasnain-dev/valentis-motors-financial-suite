@@ -34,3 +34,17 @@ desktop.ini
 !plot_scenario_comparison_revenue.png
 !validation_backtest_2023_2024.png
 !plot_budget_optimization_comparison.png
+
+# --- Module 3: Competitor Benchmarking ---
+!module3_competitor_benchmarking/data/valentis_mock_financials.csv
+module3_competitor_benchmarking/data/cache/
+.env
+.env.local
+.env.production
+!module3_competitor_benchmarking/.env.example
+
+# --- Streamlit Secrets (never commit actual secrets) ---
+.streamlit/secrets.toml
+
+# --- OS ---
+Thumbs.db
